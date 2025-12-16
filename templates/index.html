@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart AutoSecure Vision™</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .live-badge {
+      background: #e74c3c;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .small-cam:hover {
+      transform: scale(1.07);
+      border-color: #3498db !important;
+    }
+
+    .log-item {
+      padding: 10px;
+      background: #1e2a3a;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 4px solid #3498db;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .log-item.suspect {
+      border-left-color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+    }
+
+    .log-item .avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #334155;
+    }
+
+    .log-item .content {
+      flex-grow: 1;
+    }
+
+    .log-item .time {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .in {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+
+    .out {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    /* Emergency Overlay */
+    #emergencyOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(220, 38, 38, 0.85);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.9;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0.9;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="emergencyOverlay">
+    <i class="fas fa-exclamation-triangle fa-5x mb-4"></i>
+    <h1 class="display-1 fw-bold">SECURITY ALERT</h1>
+    <h2 id="alertMessage">WEAPON DETECTED</h2>
+    <div class="mt-4 p-3 bg-black bg-opacity-50 rounded" style="min-width: 400px;">
+      <h4><i class="fas fa-phone-volume"></i> AUTOMATED CALL:</h4>
+      <h3 class="fw-bold" id="callingText">...</h3>
+    </div>
+  </div>
+
+  <!-- Top Bar -->
+  <div class="topbar px-4 py-3 d-flex justify-content-between align-items-center">
+    <h3 class="mb-0"><i class="fas fa-shield-alt text-primary"></i> Smart AutoSecure Vision™</h3>
+    <div>
+      <button class="btn btn-outline-info me-3" data-bs-toggle="modal" data-bs-target="#cameraModal">
+        <i class="fas fa-video"></i> Add Camera
+      </button>
+      <button class="btn btn-warning" onclick="window.location.href='/admin'">
+        <i class="fas fa-users-cog"></i> Manage Persons
+      </button>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- Left Sidebar -->
+      <div class="col-md-3 sidebar p-4">
+        <h5 class="text-center text-info mb-4">Today's Summary — <span id="todayDate"></span></h5>
+
+        <div class="stat-card suspects mb-3">
+          <h6>Today's Suspects</h6>
+          <div class="count" id="suspects">0</div>
+        </div>
+        <div class="stat-card unknown mb-3">
+          <h6>Today's Unknown</h6>
+          <div class="count" id="unknown">0</div>
+        </div>
+        <div class="stat-card known mb-3">
+          <h6>Today's Known</h6>
+          <div class="count" id="known">0</div>
+        </div>
+        <div class="stat-card traffic">
+          <h6>Today's Total Traffic</h6>
+          <div class="count" id="traffic">0</div>
+        </div>
+      </div>
+
+      <!-- Center: Live Video -->
+      <div class="col-md-6 p-4 text-center">
+        <h2 class="mb-4">Live Video with Suspect Detection</h2>
+
+        <!-- Main Big Camera -->
+        <div class="main-video position-relative mb-4">
+          <img id="mainFeed" src="" class="w-100 h-100" style="object-fit: cover; border-radius: 18px;">
+          <div class="live-badge position-absolute top-0 start-0 m-3">LIVE</div>
+          <div class="no-cam position-absolute top-50 start-50 translate-middle text-white-50" id="noCamText">
+            Click "Add Camera" to begin
+          </div>
+        </div>
+
+        <!-- Small Grid -->
+        <div class="small-grid" id="smallGrid"></div>
+
+        <button class="btn btn-outline-light mt-4 btn-lg">
+          <i class="fas fa-plus"></i> Select Other
+        </button>
+      </div>
+
+      <!-- Right: Live Tracking -->
+      <div class="col-md-3 log-panel p-4">
+        <h5 class="text-info mb-4"><i class="fas fa-history"></i> Live Tracking</h5>
+        <div id="trackingLog" style="max-height: 600px; overflow-y: auto; padding-right: 5px;">
+          <p class="text-muted text-center mt-5">No activity yet</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Camera Modal -->
+  <div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header border-0">
+          <h5 class="modal-title"><i class="fas fa-video"></i> Select Camera</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="cameraList">
+          <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Detecting cameras...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer text-center py-3">
+    Copyright © HalalSoft Solutions 2025 — Smart AutoSecure Vision™ | Privacy-First AI Surveillance
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Set today's date
+    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-GB');
+
+    let mainCameraId = null;
+
+    // Load cameras when modal
+    async function loadCameras() {
+      const res = await fetch('/cameras');
+      const cams = await res.json();
+      const list = document.getElementById('cameraList');
+      list.innerHTML = cams.length === 0
+        ? '<p class="text-danger text-center">No camera detected!</p>'
+        : cams.map(cam => `
+          <div class="p-3 bg-primary rounded mb-2 text-start" style="cursor:pointer;" 
+               onclick="addCamera(${cam.id}, '${cam.label}')">
+            <strong>${cam.label}</strong>
+          </div>
+        `).join('');
+    }
+
+    // Add camera
+    async function addCamera(id, label) {
+      const res = await fetch('/add_camera', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, label })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message);
+        return;
+      }
+
+      if (data.main !== undefined) {
+        mainCameraId = data.main;
+        document.getElementById('mainFeed').src = `/video_feed/${mainCameraId}?t=${Date.now()}`;
+        document.getElementById('noCamText').style.display = 'none';
+      }
+
+      // Add to small grid
+      if (data.id && data.id !== data.main) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'small-cam position-relative';
+        wrapper.onclick = () => setMainCamera(data.id);
+        wrapper.innerHTML = `
+          <img src="/video_feed/${data.id}?t=${Date.now()}" class="w-100 h-100" style="object-fit: cover; border-radius: 14px;">
+          <div class="live-badge position-absolute top-0 start-0 m-2" style="font-size:0.7rem;padding:4px 10px;">LIVE</div>
+        `;
+        document.getElementById('smallGrid').appendChild(wrapper);
+      }
+
+      bootstrap.Modal.getInstance(document.getElementById('cameraModal')).hide();
+    }
+
+    // Set main camera
+    async function setMainCamera(id) {
+      await fetch(`/set_main/${id}`);
+      document.getElementById('mainFeed').src = `/video_feed/${id}?t=${Date.now()}`;
+    }
+
+    // Auto-load cameras on modal open
+    document.getElementById('cameraModal').addEventListener('show.bs.modal', loadCameras);
+
+    // Poll for stats
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+
+        document.getElementById('suspects').innerText = data.suspects;
+        document.getElementById('unknown').innerText = data.unknown;
+        document.getElementById('known').innerText = data.known;
+        document.getElementById('traffic').innerText = data.traffic;
+
+        // Update Tracking Log
+        const logContainer = document.getElementById('trackingLog');
+        if (data.history.length > 0) {
+          logContainer.innerHTML = data.history.slice().reverse().map(item => {
+            let iconHtml = '';
+            // Check for System/Weapon/System events
+            if (item.name === 'System' || item.action.includes('Weapon') || item.action.includes('Violence')) {
+              iconHtml = `<div class="rounded-circle d-flex align-items-center justify-content-center bg-danger text-white" style="width:45px; height:45px; min-width:45px; font-size:1.2rem;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                             </div>`;
+            } else {
+              const imgPath = item.image ? '/static/' + item.image : 'https://via.placeholder.com/45';
+              iconHtml = `<img src="${imgPath}" class="rounded-circle" style="width:45px; height:45px; object-fit:cover; border:2px solid ${item.name === 'Unknown' ? '#dc3545' : '#198754'};">`;
+            }
+
+            return `
+            <div class="d-flex align-items-center mb-3 p-2 rounded bg-dark bg-opacity-50 border border-secondary">
+              ${iconHtml}
+              <div class="ms-3 overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong class="${item.name === 'Unknown' ? 'text-danger' : (item.name === 'System' ? 'text-warning' : 'text-success')} text-truncate" style="max-width:140px;">${item.name}</strong>
+                  <span class="small text-muted ms-2" style="font-size:0.75rem;">${item.time}</span>
+                </div>
+                <div class="small text-white-50 text-truncate">${item.action} <span class="text-secondary">• ${item.relation}</span></div>
+              </div>
+            </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        console.error("Stats poll error", e);
+      }
+    }, 2000);
+
+    // Poll for Emergency Status
+    setInterval(async () => {
+      try {
+        const res = await fetch('/api/emergency_status');
+        const data = await res.json();
+        const overlay = document.getElementById('emergencyOverlay');
+
+        if (data.active) {
+          overlay.style.display = 'flex';
+          document.getElementById('alertMessage').innerText = data.threat + " DETECTED";
+          document.getElementById('callingText').innerText = data.calling + " (" + data.phone + ")";
+        } else {
+          overlay.style.display = 'none';
+        }
+      } catch (e) { }
+    }, 1000);
+  </script>
+
+</body>
+
+</html>

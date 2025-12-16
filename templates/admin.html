@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Smart AutoSecure Vision</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-width: 260px;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --accent-color: #3b82f6;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      background: var(--bg-card);
+      border-right: 1px solid #334155;
+      z-index: 1000;
+      padding-top: 2rem;
+    }
+
+    .sidebar-brand {
+      padding: 0 1.5rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      margin-bottom: 3rem;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-item {
+      padding: 0.75rem 1.5rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      transition: 0.3s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-color);
+      border-left-color: var(--accent-color);
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 2rem;
+    }
+
+    /* Cards */
+    .stat-card {
+      background: var(--bg-card);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-card h3 {
+      font-size: 2rem;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .stat-card p {
+      color: #94a3b8;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .icon-box {
+      width: 50px;
+      height: 50px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 1.25rem;
+    }
+
+    /* Grid & Persons */
+    .person-card {
+      background: var(--bg-card);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .person-card:hover {
+      border-color: var(--accent-color);
+      transform: translateY(-5px);
+    }
+
+    .person-img-wrapper {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+    }
+
+    .person-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .id-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid #334155;
+    }
+
+    /* Modals */
+    .modal-content {
+      background-color: var(--bg-card);
+      color: white;
+      border: 1px solid #475569;
+    }
+
+    .form-control {
+      background: #0f172a;
+      border-color: #475569;
+      color: white;
+    }
+
+    .form-control:focus {
+      background: #0f172a;
+      color: white;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-eye"></i> AutoSecure
+    </div>
+    <nav>
+      <a href="/" class="nav-item">
+        <i class="fas fa-chart-line"></i> Live Dashboard
+      </a>
+      <a href="/admin" class="nav-item active">
+        <i class="fas fa-users-cog"></i> Database Manager
+      </a>
+      <a href="/admin/contacts" class="nav-item">
+        <i class="fas fa-phone-volume"></i> Emergency Contacts
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+      <div>
+        <h2 class="fw-bold">Known Persons Database</h2>
+        <p class="text-secondary">Manage facial recognition entries and access permissions.</p>
+      </div>
+      <div>
+        <button class="btn btn-warning me-2" onclick="simulateThreat()">
+          <i class="fas fa-exclamation-triangle me-2"></i> Test Alert
+        </button>
+        <button class="btn btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#liveRegisterModal">
+          <i class="fas fa-camera me-2"></i> Live 360 Registration
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+          <i class="fas fa-plus me-2"></i> Register Person
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-5">
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div>
+            <h3>{{ persons|length }}</h3>
+            <p>Total Registered</p>
+          </div>
+          <div class="icon-box"><i class="fas fa-users"></i></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div>
+            <h3>{{ persons|selectattr('relation', 'equalto', 'Employee')|list|length }}</h3>
+            <p>Employees</p>
+          </div>
+          <div class="icon-box text-success bg-opacity-10 bg-success"><i class="fas fa-id-card"></i></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card">
+          <div>
+            <h3>Active</h3>
+            <p>System Status</p>
+          </div>
+          <div class="icon-box"><i class="fas fa-check-circle"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Persons Grid -->
+    <div class="row g-4">
+      {% for p in persons %}
+      <div class="col-md-3">
+        <div class="person-card">
+          <div class="person-img-wrapper">
+            <img src="{{ url_for('static', filename='uploads/' + p.photo) }}" class="person-img"
+              onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+            <span class="id-badge">ID: {{ p.serial_no }}</span>
+          </div>
+          <div class="p-3">
+            <h5 class="mb-1">{{ p.name }}</h5>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary">{{ p.relation }}</span>
+            </div>
+            <div class="mt-2 text-muted small">
+              <i class="fas fa-phone me-1"></i> {{ p.phone }}
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-outline-light flex-grow-1" data-bs-toggle="modal"
+              data-bs-target="#editModal{{ p.serial_no }}">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <a href="/admin/delete/{{ p.serial_no }}" class="btn btn-sm btn-outline-danger"
+              onclick="return confirm('Permanently delete {{ p.name }}?')">
+              <i class="fas fa-trash"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Modal (Scoped) -->
+      <div class="modal fade" id="editModal{{ p.serial_no }}" tabindex="-1">
+        <div class="modal-dialog">
+          <form method="POST" action="/admin/update/{{ p.serial_no }}" enctype="multipart/form-data">
+            <div class="modal-content">
+              <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label text-secondary">Full Name</label>
+                  <input type="text" name="name" value="{{ p.name }}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label text-secondary">Relation / Role</label>
+                  <input type="text" name="relation" value="{{ p.relation }}" class="form-control" required>
+                </div>
+                <div class="row mb-3">
+                  <div class="col">
+                    <label class="form-label text-secondary">Phone</label>
+                    <input type="text" name="phone" value="{{ p.phone }}" class="form-control" required>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label text-secondary">Address</label>
+                  <textarea name="address" class="form-control" rows="2">{{ p.address }}</textarea>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label text-warning">Update Photo (Optional)</label>
+                  <input type="file" name="photo" class="form-control" accept="image/*">
+                </div>
+              </div>
+              <div class="modal-footer border-top border-secondary">
+                <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </main>
+
+  <!-- Add Modal -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form method="POST" action="/admin/add" enctype="multipart/form-data">
+        <div class="modal-content">
+          <div class="modal-header border-bottom border-secondary">
+            <h5 class="modal-title">Register New Person</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info bg-opacity-10 border-info text-info small">
+              <i class="fas fa-info-circle me-1"></i> Ensure the photo clearly shows the face for best recognition
+              accuracy.
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-secondary">Full Name</label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. John Doe" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-secondary">Relation / Role</label>
+              <select name="relation" class="form-select bg-dark text-light border-secondary">
+                <option value="Family">Family</option>
+                <option value="Employee">Employee</option>
+                <option value="Visitor">Visitor</option>
+                <option value="Suspect">Suspect (Banned)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-secondary">Phone</label>
+              <input type="text" name="phone" class="form-control" placeholder="+1 234..." required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-secondary">Address</label>
+              <textarea name="address" class="form-control" rows="2" placeholder="Residential Address..."
+                required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-primary">Upload Photo</label>
+              <input type="file" name="photo" class="form-control" accept="image/*" required>
+            </div>
+          </div>
+          <div class="modal-footer border-top border-secondary">
+            <button type="submit" class="btn btn-primary w-100">Register in Database</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Live Registration Modal -->
+  <div class="modal fade" id="liveRegisterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header border-bottom border-secondary">
+          <h5 class="modal-title"><i class="fas fa-camera"></i> Live 360 Face Registration</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="row">
+            <div class="col-md-7">
+              <div class="bg-black rounded overflow-hidden position-relative" style="height:320px;">
+                <video id="regVideo" autoplay muted class="w-100 h-100" style="object-fit:cover;"></video>
+                <div class="position-absolute bottom-0 start-0 w-100 p-2 bg-dark bg-opacity-75">
+                  <button class="btn btn-danger rounded-circle p-3" onclick="captureSample()">
+                    <i class="fas fa-camera fa-2x"></i>
+                  </button>
+                  <div class="small text-white-50 mt-1">Click to capture angle</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-5 text-start">
+              <div class="mb-2">
+                <label class="text-secondary small">Name</label>
+                <input type="text" id="regName" class="form-control form-control-sm">
+              </div>
+              <div class="mb-2">
+                <label class="text-secondary small">Relation</label>
+                <select id="regRelation" class="form-select form-select-sm bg-dark text-light border-secondary">
+                  <option value="Family">Family</option>
+                  <option value="Employee">Employee</option>
+                  <option value="Suspect">Suspect (Banned)</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="text-secondary small">Phone</label>
+                <input type="text" id="regPhone" class="form-control form-control-sm">
+              </div>
+              <div class="mb-2">
+                <label class="text-secondary small">Address</label>
+                <input type="text" id="regAddress" class="form-control form-control-sm">
+              </div>
+
+              <h6 class="mt-3 border-bottom border-secondary pb-1">Captured Samples (<span id="sampleCount">0</span>)
+              </h6>
+              <div id="sampleGrid" class="d-flex flex-wrap gap-2" style="max-height:120px; overflow-y:auto;">
+                <!-- Thumbs -->
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top border-secondary">
+          <button class="btn btn-success w-100" onclick="submitLiveRegistration()">
+            <i class="fas fa-save me-2"></i> Complete Registration
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Live Registration Logic
+    const video = document.getElementById('regVideo');
+    let samples = [];
+    let stream = null;
+
+    document.getElementById('liveRegisterModal').addEventListener('show.bs.modal', async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        samples = [];
+        document.getElementById('sampleGrid').innerHTML = '';
+        document.getElementById('sampleCount').innerText = '0';
+      } catch (e) {
+        alert("Camera access denied! Ensure SSL or localhost.");
+      }
+    });
+
+    document.getElementById('liveRegisterModal').addEventListener('hide.bs.modal', () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    });
+
+    function captureSample() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const data = canvas.toDataURL('image/jpeg', 0.8);
+
+      samples.push(data);
+
+      // Add Thumb
+      const thumb = document.createElement('img');
+      thumb.src = data;
+      thumb.style.width = '50px';
+      thumb.style.height = '50px';
+      thumb.style.objectFit = 'cover';
+      thumb.className = 'rounded border border-secondary';
+      document.getElementById('sampleGrid').appendChild(thumb);
+      document.getElementById('sampleCount').innerText = samples.length;
+    }
+
+    async function submitLiveRegistration() {
+      if (samples.length < 1) return alert("Capture at least 1 sample!");
+      if (!document.getElementById('regName').value) return alert("Name required!");
+
+      const payload = {
+        name: document.getElementById('regName').value,
+        relation: document.getElementById('regRelation').value,
+        phone: document.getElementById('regPhone').value,
+        address: document.getElementById('regAddress').value,
+        images: samples
+      };
+
+      const res = await fetch('/admin/register_samples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const d = await res.json();
+      if (d.success) {
+        alert("Registration Complete!");
+        window.location.reload();
+      }
+    }
+
+    async function simulateThreat() {
+      if (confirm("This will trigger a fake SECURITY ALERT on the main dashboard. Proceed?")) {
+        await fetch('/api/simulate_threat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'TEST THREAT' })
+        });
+        alert('Alert triggered! Check the Live Dashboard.');
+      }
+    }
+  </script>
+</body>
+
+</html>

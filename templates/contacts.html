@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency Contacts - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --accent-color: #ef4444;
+            /* Red for Emergency */
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid #334155;
+            padding-top: 2rem;
+        }
+
+        .sidebar-brand {
+            padding: 0 1.5rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 3rem;
+            color: #3b82f6;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+
+        .contact-card {
+            background: var(--bg-card);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .contact-info p {
+            margin: 0;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand"><i class="fas fa-eye"></i> AutoSecure</div>
+        <nav>
+            <a href="/" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
+            <a href="/admin" class="nav-item"><i class="fas fa-users-cog"></i> Database Manager</a>
+            <a href="/admin/contacts" class="nav-item active"><i class="fas fa-phone-volume"></i> Emergency Contacts</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold text-danger">Emergency Response Team</h2>
+                <p class="text-secondary">Manage contacts who will be auto-dialed during security alerts.</p>
+            </div>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addContactModal">
+                <i class="fas fa-plus me-2"></i> Add Responder
+            </button>
+        </div>
+
+        <!-- Contacts List -->
+        <div class="row">
+            <div class="col-md-8">
+                {% for c in contacts %}
+                <div class="contact-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-danger bg-opacity-10 text-danger p-3 rounded">
+                            <i class="fas fa-user-shield fa-lg"></i>
+                        </div>
+                        <div class="contact-info">
+                            <h5>{{ c.name }}</h5>
+                            <p><i class="fas fa-phone me-1"></i> {{ c.phone }} <span class="badge bg-secondary ms-2">{{
+                                    c.relation }}</span></p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm disabled" title="Delete Not Implemented">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-phone-slash fa-3x mb-3"></i>
+                    <p>No emergency contacts configured.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Modal -->
+    <div class="modal fade" id="addContactModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST" action="/admin/add_contact">
+                <div class="modal-content" style="background: #1e293b; color: white; border: 1px solid #475569;">
+                    <div class="modal-header border-bottom border-secondary">
+                        <h5 class="modal-title">New Contact</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Name</label>
+                            <input type="text" name="name" class="form-control bg-dark text-light border-secondary"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Phone</label>
+                            <input type="text" name="phone" class="form-control bg-dark text-light border-secondary"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Role</label>
+                            <select name="relation" class="form-select bg-dark text-light border-secondary">
+                                <option value="Security">Security</option>
+                                <option value="Police">Police</option>
+                                <option value="Owner">Owner</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-secondary">
+                        <button type="submit" class="btn btn-danger w-100">Save Responder</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
