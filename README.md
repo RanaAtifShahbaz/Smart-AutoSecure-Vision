@@ -53,6 +53,7 @@ A real-time, privacy-first AI surveillance dashboard built with Python Flask, Op
 - Python 3.10+
 - MongoDB (local or Atlas)
 - Webcam or IP camera
+- Don't forget to add your .env file
 
 ### Steps
 1. Clone the repo
