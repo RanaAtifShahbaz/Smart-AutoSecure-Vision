@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -232,7 +233,7 @@
       <div class="col-md-4">
         <div class="stat-card">
           <div>
-            <h3>{{ persons|selectattr('relation', 'equalto', 'Employee')|list|length }}</h3>
+            <h3>{{ persons|length }}</h3>
             <p>Employees</p>
           </div>
           <div class="icon-box text-success bg-opacity-10 bg-success"><i class="fas fa-id-card"></i></div>
@@ -255,7 +256,7 @@
       <div class="col-md-3">
         <div class="person-card">
           <div class="person-img-wrapper">
-            <img src="{{ url_for('static', filename='uploads/' + p.photo) }}" class="person-img"
+            <img src="/static/uploads/{{ p.photo }}" class="person-img"
               onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
             <span class="id-badge">ID: {{ p.serial_no }}</span>
           </div>
@@ -273,7 +274,7 @@
               data-bs-target="#editModal{{ p.serial_no }}">
               <i class="fas fa-edit"></i> Edit
             </button>
-            <a href="/admin/delete/{{ p.serial_no }}" class="btn btn-sm btn-outline-danger"
+            <a href="/admin/delete/{{ p.serial_no }}/" class="btn btn-sm btn-outline-danger"
               onclick="return confirm('Permanently delete {{ p.name }}?')">
               <i class="fas fa-trash"></i>
             </a>
@@ -284,7 +285,7 @@
       <!-- Edit Modal (Scoped) -->
       <div class="modal fade" id="editModal{{ p.serial_no }}" tabindex="-1">
         <div class="modal-dialog">
-          <form method="POST" action="/admin/update/{{ p.serial_no }}" enctype="multipart/form-data">
+          <form method="POST" action="/admin/update/{{ p.serial_no }}/" enctype="multipart/form-data">
             <div class="modal-content">
               <div class="modal-header border-bottom border-secondary">
                 <h5 class="modal-title">Edit Profile</h5>
@@ -335,7 +336,7 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <form id="addPersonForm" onsubmit="submitAddPerson(event)">
+          <form id="addPersonForm">
             <div id="addError" class="alert alert-danger d-none"></div>
             <div class="alert alert-info bg-opacity-10 border-info text-info small">
               <i class="fas fa-info-circle me-1"></i> Ensure the photo clearly shows the face for best recognition
@@ -381,31 +382,32 @@
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
-      const errorDiv = document.getElementById('addError');
+      // Log data for debugging
+      console.log('Submitting person:', Object.fromEntries(formData));
 
       try {
-        const res = await fetch('/admin/add', {
+        const res = await fetch('/admin/add/', {
           method: 'POST',
           body: formData
         });
         const data = await res.json();
 
         if (data.success) {
-          // Success: Close Modal and Reload
-          const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
-          if (modal) modal.hide();
           window.location.reload();
         } else {
-          // Error: Show message
-          errorDiv.innerText = data.message;
-          errorDiv.classList.remove('d-none');
+          alert('Error: ' + (data.message || 'Unknown error'));
         }
       } catch (err) {
         console.error(err);
-        errorDiv.innerText = "An error occurred while communicating with the server.";
-        errorDiv.classList.remove('d-none');
+        alert("An error occurred while communicating with the server.");
       }
     }
+
+    // Attach listener
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('addPersonForm');
+      if (form) form.addEventListener('submit', submitAddPerson);
+    });
   </script>
 
   <!-- Live Registration Modal -->
@@ -536,13 +538,14 @@
     }
 
     async function simulateThreat() {
-      if (confirm("This will trigger a fake SECURITY ALERT on the main dashboard. Proceed?")) {
-        await fetch('/api/simulate_threat', {
+      const type = prompt("Enter threat type (e.g. Knife, Handgun):", "Knife");
+      if (type) {
+        await fetch('/api/simulate_threat/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'TEST THREAT' })
+          body: JSON.stringify({ type })
         });
-        alert('Alert triggered! Check the Live Dashboard.');
+        alert(`Simulated ${type} alert triggered!`);
       }
     }
   </script>

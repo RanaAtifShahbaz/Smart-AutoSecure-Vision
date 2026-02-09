@@ -143,7 +143,7 @@
                         </div>
                     </div>
 
-                    <a href="/admin/delete_contact/{{ c._id }}"
+                    <a href="/admin/delete_contact/{{ c._id }}/"
                         class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-3 opacity-50 hover-opacity-100"
                         onclick="return confirm('Permanently remove {{ c.name }} from emergency responders?')"
                         title="Delete Contact">
@@ -166,7 +166,7 @@
     <!-- Add Modal -->
     <div class="modal fade" id="addContactModal" tabindex="-1">
         <div class="modal-dialog">
-            <form method="POST" action="/admin/add_contact">
+            <form method="POST" action="/admin/add_contact/">
                 <div class="modal-content" style="background: #1e293b; color: white; border: 1px solid #475569;">
                     <div class="modal-header border-bottom border-secondary">
                         <h5 class="modal-title">New Contact</h5>

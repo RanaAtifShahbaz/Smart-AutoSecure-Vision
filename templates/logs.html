@@ -1,3 +1,5 @@
+{% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -153,14 +155,19 @@
         {% for log in logs %}
         <div class="log-card">
             <div class="log-img-wrapper">
-                <img src="{{ url_for('static', filename=log.image) if not log.image.startswith('http') else log.image }}"
-                    class="log-img" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                {% if log.image|startswith:'http' %}
+                <img src="{{ log.image }}" class="log-img"
+                    onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                {% else %}
+                <img src="/static/{{ log.image }}" class="log-img"
+                    onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                {% endif %}
             </div>
             <div class="log-content">
                 <div class="d-flex justify-content-between">
                     <h4 class="fw-bold mb-1">
                         {% if log.name == 'System' %}
-                        {{ log.action.split(':')[1] if ':' in log.action else log.action }}
+                        {{ log.action|split_action }}
                         {% else %}
                         {{ log.name }}
                         {% endif %}

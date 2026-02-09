@@ -6,7 +6,7 @@ from flask_login import UserMixin
 from pymongo import MongoClient
 import random
 import time
-from config import COLLECTION_NAME
+from .config import COLLECTION_NAME
 
 class User(UserMixin):
     def __init__(self, user_data):
