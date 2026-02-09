@@ -93,14 +93,22 @@ def video_feed(request, device_id):
     return StreamingHttpResponse(generate_frames(device_id), content_type='multipart/x-mixed-replace; boundary=frame')
 
 def get_cameras(request):
+    """
+    Scans for available cameras (0-9) that are NOT already added to the system.
+    Returns a list of available camera info.
+    """
     available = []
-    # Simplified scan (0,1)
-    for i in range(2):
+    # Simple scan of first 5 indexes
+    for i in range(5):
+        # Skip if already added
+        if i in cameras:
+            continue
+            
         cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
         if cap.isOpened():
             ret, _ = cap.read()
             if ret:
-                available.append({'id': i, 'label': f'Camera {i+1}'})
+                available.append({'id': i, 'label': f'Camera {i}'})
             cap.release()
     return JsonResponse(available, safe=False)
 
@@ -133,14 +141,23 @@ def add_camera(request):
                     del cameras[device_id]
 
             try:
-                stream = CameraStream(device_id, data['label'])
-                stream.process_callback = lambda f: camera_manager.process_frame(f, device_id, stream.roi_mask)
+                # Ensure source is integer for local webcams
+                source = device_id
+                if isinstance(source, str) and source.isdigit():
+                    source = int(source)
+
+                stream = CameraStream(source, data['label'])
+                # Start stream first to establish connection
                 stream.start()
                 
-                time.sleep(0.5)
+                # Check for initial grab
+                time.sleep(1.0) # slightly longer wait
                 if not stream.grabbed:
                      stream.stop()
-                     return JsonResponse({'success': False, 'message': 'Cannot open camera/stream'})
+                     return JsonResponse({'success': False, 'message': 'Cannot open camera/stream - Check connection'})
+
+                # Only assign callback if stream is valid
+                stream.process_callback = lambda f: camera_manager.process_frame(f, device_id, stream.roi_mask)
 
                 cameras[device_id] = {'stream': stream, 'label': data['label'], 'main': False}
                 if main_camera_id is None:
@@ -451,3 +468,23 @@ def update_person(request, serial_no):
         camera_manager.load_known_faces()
         return redirect('admin_panel')
     return redirect('admin_panel')
+
+# API Endpoints for React
+def get_persons_api(request):
+    all_persons = list(persons.find().sort("serial_no", -1))
+    for p in all_persons:
+        if '_id' in p:
+            p['_id'] = str(p['_id'])
+    return JsonResponse(all_persons, safe=False)
+
+def get_contacts_api(request):
+    contacts = camera_manager.emergency.get_contacts()
+    # Serialize ensure
+    for c in contacts:
+        if '_id' in c:
+            c['_id'] = str(c['_id'])
+    return JsonResponse(contacts, safe=False)
+
+def get_logs_api(request):
+    logs = camera_manager.get_stats().get('suspect_logs', [])
+    return JsonResponse(logs, safe=False)

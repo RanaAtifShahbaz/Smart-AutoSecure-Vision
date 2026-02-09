@@ -94,19 +94,18 @@ class CameraStream:
                 # Process frame
                 if self.process_callback:
                     try:
-                        # We pass the metadata to the callback, not apply it here blindly
-                        # Pass the mask separately ? 
-                        # Actually process_frame is decoupled.
-                        # We should just make sure self.roi_mask is accessible or passed.
-                        pass
-                        
-                        frame = self.process_callback(frame)
+                        # Process logic... usually returns annotated frame
+                        annotated = self.process_callback(self.frame) # Pass original frame
+                        if annotated is not None:
+                            self.output_frame = annotated # Display annotated
+                        else:
+                            self.output_frame = self.frame
                     except Exception as e:
-                        print(f"Error processing callback: {e}") 
-                        # If processing fails, still show raw frame!
-                
-                with self.read_lock:
-                    self.output_frame = frame.copy()
+                       # print(f"Processing error: {e}")
+                       self.output_frame = self.frame
+                else:
+                    self.output_frame = self.frame
+                time.sleep(0.01)
             
             except Exception as e:
                 print(f"Stream Error: {e}")

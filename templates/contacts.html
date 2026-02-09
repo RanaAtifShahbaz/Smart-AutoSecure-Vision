@@ -1,4 +1,4 @@
-{% load custom_filters %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -104,104 +104,20 @@
         <div class="sidebar-brand"><i class="fas fa-eye"></i> AutoSecure</div>
         <nav>
             <a href="/" class="nav-item"><i class="fas fa-chart-line"></i> Live Dashboard</a>
-            <a href="/admin" class="nav-item"><i class="fas fa-users-cog"></i> Settings</a>
-            <a href="/admin/contacts" class="nav-item active"><i class="fas fa-phone-volume"></i> Emergency Contacts</a>
-            <a href="/admin/logs" class="nav-item"><i class="fas fa-file-medical-alt"></i> Suspect Log</a>
+            <a href="/admin/" class="nav-item"><i class="fas fa-users-cog"></i> Settings</a>
+            <a href="/admin/contacts/" class="nav-item active"><i class="fas fa-phone-volume"></i> Emergency
+                Contacts</a>
+            <a href="/admin/logs/" class="nav-item"><i class="fas fa-file-medical-alt"></i> Suspect Log</a>
         </nav>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-5">
-            <div>
-                <h2 class="fw-bold text-danger">Emergency Response Team</h2>
-                <p class="text-secondary">Manage contacts who will be auto-dialed during security alerts.</p>
-            </div>
-            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addContactModal">
-                <i class="fas fa-plus me-2"></i> Add Responder
-            </button>
-        </div>
-
-        <!-- Contacts List -->
-        <div class="row g-4">
-            {% for c in contacts %}
-            <div class="col-md-6 col-lg-4">
-                <div class="contact-card h-100 position-relative group">
-                    <div class="d-flex align-items-center gap-4">
-                        <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-circle d-flex align-items-center justify-content-center"
-                            style="width: 60px; height: 60px;">
-                            <i class="fas fa-user-shield fa-lg"></i>
-                        </div>
-                        <div class="contact-info flex-grow-1">
-                            <h5 class="mb-1 text-white fw-bold">{{ c.name }}</h5>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span
-                                    class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">{{
-                                    c.relation }}</span>
-                            </div>
-                            <p class="text-secondary small font-monospace"><i class="fas fa-phone me-1"></i> {{ c.phone
-                                }}</p>
-                        </div>
-                    </div>
-
-                    <a href="/admin/delete_contact/{{ c|get_item:'_id' }}/"
-                        class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-3 opacity-50 hover-opacity-100"
-                        onclick="return confirm('Permanently remove {{ c.name }} from emergency responders?')"
-                        title="Delete Contact">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-12 py-5 text-center">
-                <div class="mb-3 text-secondary opacity-50">
-                    <i class="fas fa-users-slash fa-4x"></i>
-                </div>
-                <h5 class="text-secondary">No responders configured</h5>
-                <p class="small text-muted">Add security personnel or local authorities to auto-dial during alerts.</p>
-            </div>
-            {% endfor %}
-        </div>
+        <div id="contacts-root"></div>
     </main>
 
-    <!-- Add Modal -->
-    <div class="modal fade" id="addContactModal" tabindex="-1">
-        <div class="modal-dialog">
-            <form method="POST" action="/admin/add_contact/">
-                <div class="modal-content" style="background: #1e293b; color: white; border: 1px solid #475569;">
-                    <div class="modal-header border-bottom border-secondary">
-                        <h5 class="modal-title">New Contact</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label text-secondary">Name</label>
-                            <input type="text" name="name" class="form-control bg-dark text-light border-secondary"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-secondary">Phone</label>
-                            <input type="text" name="phone" class="form-control bg-dark text-light border-secondary"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-secondary">Role</label>
-                            <select name="relation" class="form-select bg-dark text-light border-secondary">
-                                <option value="Security">Security</option>
-                                <option value="Police">Police</option>
-                                <option value="Owner">Owner</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-top border-secondary">
-                        <button type="submit" class="btn btn-danger w-100">Save Responder</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="{% static 'dist/assets/main.js' %}"></script>
 </body>
 
 </html>

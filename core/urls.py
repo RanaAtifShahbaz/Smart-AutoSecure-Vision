@@ -22,6 +22,11 @@ urlpatterns = [
     path('api/emergency_status/', views.get_emergency_status, name='get_emergency_status'),
     path('api/simulate_threat/', views.simulate_threat, name='simulate_threat'),
     
+    # New React APIs
+    path('api/persons/', views.get_persons_api, name='get_persons_api'),
+    path('api/contacts/', views.get_contacts_api, name='get_contacts_api'),
+    path('api/logs/', views.get_logs_api, name='get_logs_api'),
+    
     # Admin
     path('admin/', views.admin_panel, name='admin_panel'),
     path('admin/contacts/', views.contacts_panel, name='contacts_panel'),
