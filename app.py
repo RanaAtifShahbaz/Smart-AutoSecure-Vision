@@ -9,10 +9,11 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import ConfigurationError, ConnectionFailure, ServerSelectionTimeoutError
 from bson.objectid import ObjectId
-from json_db import JsonDB
-from config import MONGODB_URI, DATABASE_NAME, COLLECTION_NAME
-from camera_manager import CameraManager, CameraStream
-from auth_manager import AuthManager
+from core.json_db import JsonDB
+from core.config import MONGODB_URI, DATABASE_NAME, COLLECTION_NAME
+from core.camera_manager import CameraManager, CameraStream
+from core.auth_manager import AuthManager
+
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import time
 
@@ -22,26 +23,46 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # MongoDB Connection
+import certifi
+
+db = None
+persons = None
+client = None
+
+# 1. Atlas (Certifi)
 try:
-    # Try connecting with a timeout
-    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
-    client.admin.command('ping') # Trigger connection check
-    print("Connected to MongoDB (Primary)")
+    print("Attempting to connect to MongoDB Atlas with certifi...")
+    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
+    client.admin.command('ping')
+    print("Connected to MongoDB (Atlas - Certifi)")
     db = client[DATABASE_NAME]
     persons = db[COLLECTION_NAME]
-except (ConfigurationError, ConnectionFailure, ServerSelectionTimeoutError) as e:
-    print(f"Warning: Could not connect to primary MongoDB ({e}). Trying Localhost...")
+except Exception as e_cert:
+    print(f"Warning: Certifi connection failed ({e_cert}). Trying Unverified SSL...")
+    
+    # 2. Atlas (Unverified SSL)
     try:
-        client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=2000)
+        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000, tls=True, tlsAllowInvalidCertificates=True)
         client.admin.command('ping')
-        print("Connected to MongoDB (Localhost)")
+        print("Connected to MongoDB (Atlas - Unverified SSL)")
         db = client[DATABASE_NAME]
         persons = db[COLLECTION_NAME]
-    except Exception as e2:
-        print(f"Info: Localhost MongoDB not available. Using Built-in Local Storage (json_db).")
-        # Fallback to JSON DB
-        db = JsonDB("smart_vision") # Acts as Database
-        persons = db[COLLECTION_NAME] # Acts as Collection
+    except Exception as e_ssl:
+        print(f"Warning: Unverified SSL failed ({e_ssl}). Trying Localhost...")
+        
+        # 3. Localhost
+        try:
+            client = MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=2000)
+            client.admin.command('ping')
+            print("Connected to MongoDB (Localhost)")
+            db = client[DATABASE_NAME]
+            persons = db[COLLECTION_NAME]
+        except Exception as e_local:
+            print(f"Info: Localhost MongoDB not available ({e_local}). Using Built-in Local Storage (json_db).")
+            # 4. Fallback to JSON DB
+            db = JsonDB("smart_vision")
+            persons = db[COLLECTION_NAME]
+
 
 # Initialize Camera Manager
 camera_manager = CameraManager(app.config, db)
@@ -495,5 +516,42 @@ def update_person(serial_no):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# --- NEW API ROUTES ---
+@app.route('/api/persons', methods=['GET'])
+def get_persons_api():
+    all_persons = list(persons.find().sort("serial_no", -1))
+    for p in all_persons:
+        if '_id' in p: p['_id'] = str(p['_id'])
+    return jsonify(all_persons)
+
+@app.route('/api/contacts', methods=['GET'])
+def get_contacts_api():
+    contacts = camera_manager.emergency.get_contacts()
+    for c in contacts:
+         if '_id' in c: c['_id'] = str(c['_id'])
+    return jsonify(contacts)
+
+@app.route('/api/logs', methods=['GET'])
+def get_logs_api():
+    try:
+        logs = list(db['suspect_logs'].find().sort("timestamp", -1).limit(100))
+        for log in logs:
+            if '_id' in log: log['_id'] = str(log['_id'])
+    except:
+        logs = []
+    return jsonify(logs)
+
+@app.route('/api/add_contact', methods=['POST'])
+def api_add_contact():
+    data = request.json
+    success = camera_manager.emergency.add_contact(data.get('name'), data.get('phone'), data.get('relation'))
+    return jsonify({'success': success})
+
+@app.route('/api/delete_contact/<contact_id>', methods=['DELETE'])
+def api_delete_contact(contact_id):
+    success = camera_manager.emergency.delete_contact(contact_id)
+    return jsonify({'success': success})
+
 if __name__ == '__main__':
+
     app.run(debug=True, port=5000)

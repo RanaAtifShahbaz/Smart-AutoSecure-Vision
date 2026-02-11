@@ -66,12 +66,52 @@ export const addPerson = async (formData) => {
     return res.json();
 };
 
-export const addContact = async (formData) => {
-    const res = await fetch(`${API_BASE}/admin/add_contact/`, {
+export const updatePerson = async (serial_no, formData) => {
+    const res = await fetch(`${API_BASE}/admin/update/${serial_no}/`, {
         method: 'POST',
         body: formData
     });
-    return res;
+    return res.json();
+};
+
+export const deletePerson = async (serial_no) => {
+    const res = await fetch(`${API_BASE}/admin/delete/${serial_no}/`);
+    return res.json();
+};
+
+// Auth API
+export const apiLogin = async (email, password) => {
+    const res = await fetch(`${API_BASE}/api/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    return res.json();
+};
+
+export const apiRegister = async (name, email, password) => {
+    const res = await fetch(`${API_BASE}/api/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+    });
+    return res.json();
+};
+
+export const addContact = async (name, phone, relation) => {
+    const res = await fetch(`${API_BASE}/api/add_contact/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, relation })
+    });
+    return res.json();
+};
+
+export const deleteContact = async (id) => {
+    const res = await fetch(`${API_BASE}/api/delete_contact/${id}/`, {
+        method: 'DELETE'
+    });
+    return res.json();
 };
 
 // New API functions

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AutoSecure Vision - Dev Workbench</title>
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <!-- Proxy to Django Static Files -->
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        /* Dev Workbench Styles */
+        body {
+            padding-top: 0px;
+            /* Space for fixed navbar removed */
+            background-color: #0f172a;
+            /* Match app bg */
+        }
+
+        .dev-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 0.5rem 1rem;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .dev-brand {
+            font-weight: bold;
+            color: #3b82f6;
+            margin-right: 1rem;
+        }
+
+        .dev-nav-btn {
+            background: transparent;
+            border: 1px solid #475569;
+            color: #cbd5e1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dev-nav-btn:hover,
+        .dev-nav-btn.active {
+            background_color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        /* Container Visibility */
+        .component-container {
+            display: none;
+            /* Hidden by default */
+            padding: 20px;
+        }
+
+        .component-container.active {
+            display: block;
+        }
+
+        /* Layout Simulation */
+        .admin-simulator {
+            display: flex;
+        }
+
+        .admin-simulator .sidebar-mock {
+            width: 260px;
+            background: #1e293b;
+            border-right: 1px solid #334155;
+            min-height: 100vh;
+            padding: 20px;
+            display: none;
+            /* Only show in admin mode */
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Dev Navigation Bar (Hidden for Production View) -->
+    <!-- 
+    <nav class="dev-navbar">
+        <div class="dev-brand">DEV WORKBENCH</div>
+        <button class="dev-nav-btn active" onclick="showComponent('dashboard')">Dashboard</button>
+        <button class="dev-nav-btn" onclick="showComponent('admin')">Database</button>
+        <button class="dev-nav-btn" onclick="showComponent('logs')">Suspect Logs</button>
+        <button class="dev-nav-btn" onclick="showComponent('contacts')">Contacts</button>
+        <button class="dev-nav-btn" onclick="showComponent('login')">Login/Register</button>
+    </nav> 
+    -->
+
+    <!-- Dashboard Container -->
+    <div id="container-dashboard" class="component-container active">
+        <!-- Dashboard expects full width, no sidebar -->
+        <div id="dashboard-root"></div>
+    </div>
+
+    <!-- Login Container -->
+    <div id="container-login" class="component-container">
+        <div id="login-root"></div>
+    </div>
+
+    <!-- Admin Container -->
+    <div id="container-admin" class="component-container">
+        <!-- Admin expects a sidebar context usually, mocking structure if needed -->
+        <div class="row">
+            <div class="col-12">
+                <div id="admin-root"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Container -->
+    <div id="container-logs" class="component-container">
+        <div id="logs-root"></div>
+    </div>
+
+    <!-- Contacts Container -->
+    <div id="container-contacts" class="component-container">
+        <div id="contacts-root"></div>
+    </div>
+
+    <!-- Controller Script -->
+    <script>
+        function showComponent(name) {
+            // Hide all
+            document.querySelectorAll('.component-container').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.dev-nav-btn').forEach(el => el.classList.remove('active'));
+
+            // Show selected
+            document.getElementById('container-' + name).classList.add('active');
+
+            // Update button state
+            const btn = Array.from(document.querySelectorAll('.dev-nav-btn')).find(b => b.textContent.toLowerCase().includes(name));
+            if (btn) btn.classList.add('active');
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

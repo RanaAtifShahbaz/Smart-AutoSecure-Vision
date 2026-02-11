@@ -22,6 +22,18 @@ export default defineConfig({
         }
     },
     server: {
-        origin: 'http://localhost:5173',
+        origin: 'http://localhost:5175',
+        port: 5175,
+
+        proxy: {
+            '/api': 'http://127.0.0.1:5000',
+            '/admin': 'http://127.0.0.1:5000',
+            '/static': 'http://127.0.0.1:5000',
+            '/cameras': 'http://127.0.0.1:5000',
+            '/video_feed': 'http://127.0.0.1:5000',
+            '/add_camera': 'http://127.0.0.1:5000',
+            '/set_main': 'http://127.0.0.1:5000',
+        }
+
     }
 })

@@ -9,6 +9,7 @@ from datetime import datetime
 from .config import MONGODB_URI, DATABASE_NAME, COLLECTION_NAME
 from pymongo import MongoClient
 from ultralytics import YOLO
+import torch 
 from .emergency_manager import EmergencyManager
 
 class CameraStream:
@@ -135,6 +136,13 @@ class CameraManager:
         
         # Initialize YOLO
         print("Loading YOLOv8 model...")
+        # Torch 2.6 security fix: weights_only=True by default breaks YOLO unpickling
+        try:
+            import ultralytics
+            torch.serialization.add_safe_globals([ultralytics.nn.tasks.DetectionModel])
+        except:
+            pass
+            
         self.model = YOLO('yolov8n.pt') 
         # Standard COCO classes: 43=knife, 76=scissors. 
         # Extended & Proxy Classes:
@@ -159,13 +167,25 @@ class CameraManager:
             "unknown": 0,
             "known": 0,
             "traffic": 0,
-            "history": [] # Simple log
+            "history": [], # Simple log
+            "suspect_logs": []
         }
+        
+        # Hydrate stats from DB
+        try:
+            recent_logs = list(self.db['suspect_logs'].find().sort("timestamp", -1).limit(20))
+            for log in recent_logs:
+                if '_id' in log: del log['_id'] # Remove objectid for json safety
+                if 'timestamp' in log: del log['timestamp']
+            self.stats['history'] = recent_logs
+            self.stats['suspect_logs'] = recent_logs # For consistency
+        except Exception as e:
+            print(f"Error hydrating stats: {e}")
         self.stats_lock = threading.Lock()
         
         # Auto-Registration Counter
         # Check highest "Unknown X" in DB to resume numbering
-        last_unknown = self.persons.find_one({"name": {"$regex": "^Unknown \d+"}}, sort=[("created_at", -1)])
+        last_unknown = self.persons.find_one({"name": {"$regex": r"^Unknown \d+"}}, sort=[("created_at", -1)])
         self.auto_id_counter = 1
         if last_unknown:
             try:
@@ -559,21 +579,22 @@ class CameraManager:
         return frame
 
     def log_event(self, name, action, relation="Visitor", face_img=None):
-        """Adds an event to the history log"""
-        # Limit log size
-        if len(self.stats["history"]) > 20: # Increased log size
-            self.stats["history"].pop(0)
-            
-        # Avoid duplicate consecutive logs (debounce 2 seconds)
+        """Adds an event to the history log and persists to MongoDB"""
+        
+        # Debounce logic check (Memory based for speed)
         now = datetime.now()
         if self.stats["history"]:
             last = self.stats["history"][-1]
-            last_time = datetime.strptime(last['time'], "%H:%M:%S")
-            seconds_diff = abs((now - now.replace(hour=last_time.hour, minute=last_time.minute, second=last_time.second)).total_seconds())
-            
-            # Same name/action debounce
-            if last['name'] == name and last['action'] == action and seconds_diff < 3: 
-                return
+            try:
+                # Handle potentially different time formats if reading from DB vs memory
+                last_time_str = last.get('time') # HH:MM:SS
+                if last_time_str:
+                    last_time = datetime.strptime(last_time_str, "%H:%M:%S")
+                    last_time = now.replace(hour=last_time.hour, minute=last_time.minute, second=last_time.second)
+                    seconds_diff = abs((now - last_time).total_seconds())
+                    if last['name'] == name and last['action'] == action and seconds_diff < 3: 
+                        return
+            except: pass
 
         # Increment Stats (Event Based)
         with self.stats_lock:
@@ -593,9 +614,6 @@ class CameraManager:
             save_path = os.path.join(self.captures_dir, filename)
             try:
                 cv2.imwrite(save_path, face_img)
-                # Client needs path relative to 'static'. 
-                # UPLOAD_FOLDER is 'static/uploads'.
-                # So we want 'uploads/captures/filename'.
                 snap_rel_path = f"uploads/captures/{filename}"
             except Exception as e:
                 print(f"Failed to save snap: {e}")
@@ -606,19 +624,21 @@ class CameraManager:
             "relation": relation,
             "image": snap_rel_path,
             "time": now.strftime("%H:%M:%S"),
-            "date": now.strftime("%Y-%m-%d")
+            "date": now.strftime("%Y-%m-%d"),
+            "timestamp": now # For sorting
         }
         
+        # 1. Update In-Memory (for Dashboard live feed)
         self.stats["history"].append(log_entry)
-        
-        # Permanent Log for "Suspects Log" page
+        if len(self.stats["history"]) > 20: 
+            self.stats["history"].pop(0)
+
+        # 2. Persist to MongoDB (Suspect Logs)
         if name == "System" or "Suspect" in relation or name == "Unknown":
-             if "suspect_logs" not in self.stats: self.stats["suspect_logs"] = []
-             # Prepend to show newest first
-             self.stats["suspect_logs"].insert(0, log_entry)
-             # Limit to 100 for now
-             if len(self.stats["suspect_logs"]) > 100:
-                 self.stats["suspect_logs"].pop()
+             try:
+                 self.db['suspect_logs'].insert_one(log_entry.copy())
+             except Exception as e:
+                 print(f"DB Log Error: {e}")
 
 
     def get_stats(self):
