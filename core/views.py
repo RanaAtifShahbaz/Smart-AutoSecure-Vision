@@ -320,14 +320,16 @@ def add_person(request):
         serial_no = (last['serial_no'] + 1) if last else 1001
         
         photo_path = "default.jpg"
+        photo_bin = None
         if 'photo' in request.FILES:
             file = request.FILES['photo']
             if file.name:
                 photo_path = f"{serial_no}_{file.name}"
-                # Save manually
+                # Read binary content
+                photo_bin = file.read()
+                # Save manually to disk (optional but kept for compatibility)
                 with open(os.path.join(app_shim['UPLOAD_FOLDER'], photo_path), 'wb+') as destination:
-                    for chunk in file.chunks():
-                        destination.write(chunk)
+                    destination.write(photo_bin)
         
         persons.insert_one({
             "serial_no": serial_no,
@@ -336,6 +338,7 @@ def add_person(request):
             "phone": phone,
             "address": address,
             "photo": photo_path,
+            "photo_bin": photo_bin, # Store binary
             "created_at": datetime.now()
         })
         
@@ -350,13 +353,15 @@ def add_person(request):
     return JsonResponse({'error': 'POST required'}, status=400)
 
 
+@csrf_exempt
 def delete_person(request, serial_no):
     p = persons.find_one({"serial_no": int(serial_no)})
     if p:
         name = p['name']
         persons.delete_one({"serial_no": int(serial_no)})
         camera_manager.remove_person_from_memory(name)
-    return redirect('admin_panel')
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "message": "Person not found"})
 
 @csrf_exempt
 def register_samples(request):
@@ -391,6 +396,7 @@ def register_samples(request):
         os.makedirs(save_dir, exist_ok=True)
         
         first_image_path = None
+        first_image_bin = None
         
         for idx, img_data in enumerate(images):
             if ',' in img_data: img_data = img_data.split(',')[1]
@@ -404,6 +410,7 @@ def register_samples(request):
                 
                 if idx == 0: 
                     first_image_path = f"known/{dir_name}/{filename}"
+                    first_image_bin = img_bytes # Keep for binary storage
             except Exception as e:
                 print(f"Error saving image: {e}")
 
@@ -416,6 +423,7 @@ def register_samples(request):
             }
             if existing_person.get('photo', 'default.jpg') == 'default.jpg' and first_image_path:
                  update_fields['photo'] = first_image_path
+                 update_fields['photo_bin'] = first_image_bin
                  
             persons.update_one({"_id": existing_person['_id']}, {"$set": update_fields})
         else:
@@ -426,6 +434,7 @@ def register_samples(request):
                 "phone": phone,
                 "address": address,
                 "photo": first_image_path if first_image_path else "default.jpg",
+                "photo_bin": first_image_bin if first_image_path else None,
                 "photo_dir": f"known/{dir_name}",
                 "created_at": datetime.now()
             })
@@ -466,8 +475,45 @@ def update_person(request, serial_no):
         
         persons.update_one({"serial_no": int(serial_no)}, {"$set": data})
         camera_manager.load_known_faces()
-        return redirect('admin_panel')
-    return redirect('admin_panel')
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "message": "POST required"}, status=400)
+
+# --- API AUTH & ACTIONS ---
+@csrf_exempt
+def api_login(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data.get('email')
+        password = data.get('password')
+        user, msg = auth_manager.login_user(email, password)
+        if user:
+            request.session['user_id'] = str(user.id)
+            return JsonResponse({'success': True, 'user': {'name': user.name, 'email': user.email}})
+        return JsonResponse({'success': False, 'message': msg})
+    return JsonResponse({'error': 'POST required'}, status=400)
+
+@csrf_exempt
+def api_register(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        success, msg = auth_manager.register_user(data.get('name'), data.get('email'), data.get('password'))
+        return JsonResponse({'success': success, 'message': msg})
+    return JsonResponse({'error': 'POST required'}, status=400)
+
+@csrf_exempt
+def api_add_contact(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        success = camera_manager.emergency.add_contact(data.get('name'), data.get('phone'), data.get('relation'))
+        return JsonResponse({'success': success})
+    return JsonResponse({'error': 'POST required'}, status=400)
+
+@csrf_exempt
+def api_delete_contact(request, contact_id):
+    if request.method == 'DELETE':
+        success = camera_manager.emergency.delete_contact(contact_id)
+        return JsonResponse({'success': success})
+    return JsonResponse({'error': 'DELETE required'}, status=400)
 
 # API Endpoints for React
 def get_persons_api(request):
@@ -475,16 +521,29 @@ def get_persons_api(request):
     for p in all_persons:
         if '_id' in p:
             p['_id'] = str(p['_id'])
+        
+        # Handle binary image data if present
+        if 'photo_bin' in p and isinstance(p['photo_bin'], bytes):
+            b64 = base64.b64encode(p['photo_bin']).decode('utf-8')
+            p['image'] = f"data:image/png;base64,{b64}"
+            # Remove binary from response to save bandwidth
+            del p['photo_bin']
+            
     return JsonResponse(all_persons, safe=False)
 
 def get_contacts_api(request):
     contacts = camera_manager.emergency.get_contacts()
-    # Serialize ensure
     for c in contacts:
         if '_id' in c:
             c['_id'] = str(c['_id'])
     return JsonResponse(contacts, safe=False)
 
 def get_logs_api(request):
-    logs = camera_manager.get_stats().get('suspect_logs', [])
+    # Fetch from MongoDB instead of memory
+    try:
+        logs = list(db['suspect_logs'].find().sort("timestamp", -1).limit(100))
+        for log in logs:
+            if '_id' in log: log['_id'] = str(log['_id'])
+    except:
+        logs = []
     return JsonResponse(logs, safe=False)

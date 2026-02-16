@@ -94,173 +94,174 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="d-flex flex-column h-100">
-
-
-            <div className="container-fluid p-4 mt-3 flex-grow-1">
-                {/* Header / Emergency Overlay */}
-                {emergency.active && (
-                    <div id="emergencyOverlay" style={{ display: 'flex' }}>
-                        <i className="fas fa-exclamation-triangle fa-5x mb-3"></i>
-                        <h1 className="fw-bold display-3">SECURITY ALERT</h1>
-                        <h2 className="text-uppercase">{emergency.threat} DETECTED</h2>
-                        <div className="mt-4 p-4 border border-light rounded">
-                            <h4><i className="fas fa-phone-volume me-2"></i> {emergency.message}</h4>
-                            <div className="display-6 fw-bold mt-2">{emergency.phone}</div>
-                            <div className="small mt-2">AUTO-DIALING EMERGENCY CONTACT...</div>
-                        </div>
+        <div className="d-flex flex-column h-100 bg-dark-theme text-light font-sans">
+            {/* Header */}
+            <div className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom border-dark-subtle bg-header">
+                <div className="d-flex align-items-center gap-3">
+                    <div className="logo-box bg-primary text-white p-2 rounded">
+                        <i className="fas fa-shield-alt fa-lg"></i>
                     </div>
-                )}
-
-                {/* Top Spacing / Title */}
-                {/* Top Header */}
-                <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
-                    <div className="d-flex align-items-center gap-3">
-                        <div className="bg-primary bg-opacity-10 p-3 rounded text-primary">
-                            <i className="fas fa-shield-alt fa-2x"></i>
+                    <div>
+                        <h5 className="fw-bold mb-0 text-uppercase tracking-wider">Smart AutoSecure Vision</h5>
+                        <div className="d-flex align-items-center gap-2 text-secondary" style={{ fontSize: '0.75rem' }}>
+                            <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-0.5">LIVE DASHBOARD</span>
+                            <span>Real-time surveillance & threat monitoring</span>
                         </div>
-                        <div>
-                            <h4 className="fw-bold mb-0 text-uppercase text-white" style={{ letterSpacing: '1px' }}>Smart AutoSecure Vision</h4>
-                            <div className="d-flex align-items-center gap-2 text-secondary small mt-1">
-                                <span className="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">LIVE DASHBOARD</span>
-                                <span>Real-time surveillance & threat monitoring</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="d-flex align-items-center gap-3">
-                        <div className="d-flex gap-3 me-3 border-end border-secondary pe-3 small">
-                            <a href="#" className="text-secondary text-decoration-none hover-white"><i className="fas fa-info-circle me-1"></i> About</a>
-                            <a href="#" className="text-secondary text-decoration-none hover-white"><i className="fas fa-question-circle me-1"></i> Help</a>
-                            <a href="/login/" className="text-secondary text-decoration-none hover-white"><i className="fas fa-sign-in-alt me-1"></i> Login</a>
-                        </div>
-                        <span className="badge bg-dark border border-secondary p-2">
-                            <i className="fas fa-clock me-1"></i> {new Date().toLocaleTimeString()}
-                        </span>
                     </div>
                 </div>
+                <div className="d-flex align-items-center gap-4 text-sm text-secondary">
+                    <div className="d-flex gap-3">
+                        <a href="#" className="text-secondary text-decoration-none hover-text-white"><i className="fas fa-info-circle me-1"></i> About</a>
+                        <a href="#" className="text-secondary text-decoration-none hover-text-white"><i className="fas fa-question-circle me-1"></i> Help</a>
+                        <button className="btn btn-link p-0 text-secondary text-decoration-none hover-text-white" onClick={() => window.showComponent('login')}><i className="fas fa-sign-in-alt me-1"></i> Login</button>
+                    </div>
+                    <div className="border-start border-secondary ps-3 text-white fw-bold font-monospace">
+                        <i className="fas fa-clock me-2 text-primary"></i>
+                        {new Date().toLocaleTimeString()}
+                    </div>
+                </div>
+            </div>
 
+            <div className="container-fluid p-4 flex-grow-1 overflow-hidden">
                 <div className="row g-4 h-100">
-                    {/* Left Column: Stats (Vertical) */}
+                    {/* LEFT SIDEBAR: STATS */}
                     <div className="col-lg-2 d-flex flex-column gap-3">
-                        <div className="stat-card">
-                            <div>
-                                <h3>{stats.known}</h3>
-                                <p>Known Persons</p>
-                            </div>
-                            <div className="icon-box text-success bg-opacity-10 bg-success">
-                                <i className="fas fa-user-check"></i>
-                            </div>
+                        {/* Known Persons - Green */}
+                        <div className="stat-card border-green">
+                            <h2 className="text-green fw-bold mb-0">{stats.known}</h2>
+                            <p className="text-secondary small text-uppercase mb-0">Known Persons</p>
+                            <div className="stat-icon text-green"><i className="fas fa-user-check"></i></div>
                         </div>
-                        <div className="stat-card">
-                            <div>
-                                <h3>{stats.unknown}</h3>
-                                <p>Unknown Persons</p>
-                            </div>
-                            <div className="icon-box text-warning bg-opacity-10 bg-warning">
-                                <i className="fas fa-user-secret"></i>
-                            </div>
+
+                        {/* Unknown Persons - Yellow */}
+                        <div className="stat-card border-yellow">
+                            <h2 className="text-yellow fw-bold mb-0">{stats.unknown}</h2>
+                            <p className="text-secondary small text-uppercase mb-0">Unknown Persons</p>
+                            <div className="stat-icon text-yellow"><i className="fas fa-user-secret"></i></div>
                         </div>
-                        <div className="stat-card">
-                            <div>
-                                <h3>{stats.suspects}</h3>
-                                <p>Suspects Detected</p>
-                            </div>
-                            <div className="icon-box text-danger bg-opacity-10 bg-danger">
-                                <i className="fas fa-exclamation-circle"></i>
-                            </div>
+
+                        {/* Suspects - Red */}
+                        <div className="stat-card border-red">
+                            <h2 className="text-red fw-bold mb-0">{stats.suspects}</h2>
+                            <p className="text-secondary small text-uppercase mb-0">Suspects Detected</p>
+                            <div className="stat-icon text-red"><i className="fas fa-exclamation-triangle"></i></div>
                         </div>
-                        <div className="stat-card">
-                            <div>
-                                <h3>{stats.history ? stats.history.length : 0}</h3>
-                                <p>Total Events</p>
-                            </div>
-                            <div className="icon-box text-info bg-opacity-10 bg-info">
-                                <i className="fas fa-chart-line"></i>
-                            </div>
+
+                        {/* Total Events - Blue */}
+                        <div className="stat-card border-blue flex-grow-1 d-flex flex-column justify-content-center">
+                            <h2 className="text-blue fw-bold mb-0 display-5">{stats.history ? stats.history.length : 0}</h2>
+                            <p className="text-secondary small text-uppercase mb-0">Total Events</p>
+                            <div className="stat-icon text-blue bottom-right"><i className="fas fa-chart-bar"></i></div>
                         </div>
                     </div>
 
-                    {/* Center Column: Live Streams */}
-                    <div className="col-lg-7">
-                        <div className="main-video-wrapper mb-3" style={{ height: '60vh' }}>
+                    {/* CENTER: VIDEO FEEDS */}
+                    <div className="col-lg-7 d-flex flex-column gap-3">
+                        {/* Main Feed */}
+                        <div className="main-video-container flex-grow-1 position-relative bg-black rounded-3 border border-dark-subtle overflow-hidden shadow-lg">
                             {mainCameraId !== null ? (
-                                <div className="main-video h-100">
+                                <>
                                     <img
                                         key={mainCameraId}
                                         src={`/video_feed/${mainCameraId}/?t=${Date.now()}`}
-                                        className="w-100 h-100 object-fit-cover rounded-3"
-                                        alt="Main Camera"
+                                        className="w-100 h-100 object-fit-contain"
+                                        alt="Main Feed"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/800x600?text=Signal+Lost'; }}
                                     />
-                                    <div className="live-badge position-absolute top-0 start-0 m-3">
-                                        <span className="blink-dot"></span> LIVE FEED
+                                    {/* Overlays */}
+                                    <div className="position-absolute top-0 start-0 m-3 px-3 py-1 bg-danger text-white rounded-pill small fw-bold shadow-sm animate-pulse">
+                                        <span className="blink-dot bg-white me-2"></span>LIVE FEED
                                     </div>
                                     <button
-                                        className="btn btn-sm btn-dark position-absolute top-0 end-0 m-4"
+                                        className="btn btn-dark btn-sm position-absolute top-0 end-0 m-3 border-secondary"
                                         onClick={() => openRoi(mainCameraId)}
                                     >
-                                        <i className="fas fa-crop-alt"></i> Edit ROI
+                                        <i className="fas fa-crop-alt me-2"></i> Edit ROI
                                     </button>
-                                </div>
+                                    {/* ROI Guidelines Simulation */}
+                                    <div className="roi-overlay"></div>
+                                </>
                             ) : (
-                                <div className="d-flex flex-column align-items-center justify-content-center h-100 text-secondary border border-secondary border-dashed rounded-3">
-                                    <i className="fas fa-video-slash fa-3x mb-3"></i>
-                                    <h5>No Main Camera Selected</h5>
+                                <div className="h-100 d-flex flex-column align-items-center justify-content-center text-secondary">
+                                    <i className="fas fa-video-slash fa-3x mb-3 opacity-50"></i>
+                                    <h6>NO SIGNAL</h6>
                                 </div>
                             )}
                         </div>
 
-                        {/* Small Cameras Grid */}
-                        <div className="row g-2">
+                        {/* Camera Grid */}
+                        <div className="camera-grid-row d-flex gap-3 overflow-x-auto pb-2" style={{ height: '140px' }}>
                             {cameras.map(cam => (
-                                <div className="col-md-3 col-6" key={cam.id}>
-                                    <div className={`small-cam position-relative ${cam.id === mainCameraId ? 'border border-primary border-4 shadow-lg' : 'border border-secondary'}`}
-                                        style={{ width: '100%', paddingTop: '100%', cursor: 'pointer', overflow: 'hidden', borderRadius: '12px' }}
-                                        onClick={() => handleSetMain(cam.id)}>
-                                        <img
-                                            src={`/video_feed/${cam.id}/?t=${Date.now()}`}
-                                            className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
-                                        />
-                                        <div className="live-badge position-absolute top-0 start-0 m-2 badge bg-danger text-white rounded-pill shadow-sm" style={{ fontSize: '0.65rem' }}>
-                                            {cam.id === mainCameraId ? 'MAIN' : 'LIVE'}
-                                        </div>
-                                        <div className="position-absolute bottom-0 start-0 m-1 text-white bg-dark bg-opacity-75 px-2 rounded small" style={{ fontSize: '0.7rem' }}>
-                                            {cam.label}
-                                        </div>
+                                <div
+                                    key={cam.id}
+                                    className={`camera-thumbnail position-relative rounded-3 overflow-hidden flex-shrink-0 cursor-pointer ${mainCameraId === cam.id ? 'active-cam' : ''}`}
+                                    style={{ width: '200px', background: '#000' }}
+                                    onClick={() => handleSetMain(cam.id)}
+                                >
+                                    <img
+                                        src={`/video_feed/${cam.id}/?t=${Date.now()}`}
+                                        className="w-100 h-100 object-fit-cover opacity-75 hover-opacity-100 transition-all"
+                                    />
+                                    <div className="position-absolute bottom-0 start-0 w-100 p-2 bg-gradient-to-t from-black to-transparent">
+                                        <span className={`badge ${mainCameraId === cam.id ? 'bg-primary' : 'bg-secondary'} small`}>{cam.label}</span>
                                     </div>
+                                    {mainCameraId === cam.id && (
+                                        <div className="position-absolute top-0 end-0 m-2 text-primary"><i className="fas fa-check-circle"></i></div>
+                                    )}
                                 </div>
                             ))}
+                            {/* Add Camera Placeholder if empty */}
+                            {cameras.length === 0 && (
+                                <div className="d-flex align-items-center justify-content-center border border-secondary border-dashed rounded-3 text-secondary small w-100">
+                                    No Cameras Detected
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Right Column: Actions & Logs */}
+                    {/* RIGHT SIDEBAR: ACTIONS & LOGS */}
                     <div className="col-lg-3 d-flex flex-column gap-3">
-                        {/* Action Buttons */}
-                        <div className="d-grid gap-2">
-                            {/* Note: cameraModal is defined in index.html (legacy). We trigger it via data-attributes. */}
-                            <button className="btn btn-primary" type="button" onClick={handleOpenAddModal}>
-                                <i className="fas fa-plus-circle me-2"></i> Add Camera
-                            </button>
-                            <a href="/admin/" className="btn btn-outline-light">
-                                <i className="fas fa-cog me-2"></i> Admin Panel
-                            </a>
-                        </div>
+                        <button className="btn btn-primary w-100 py-3 fw-bold text-uppercase shadow-primary hover-scale" onClick={handleOpenAddModal}>
+                            <i className="fas fa-plus-circle me-2"></i> Add Camera
+                        </button>
+                        <button className="btn btn-outline-light w-100 py-2 border-secondary hover-bg-light-dark" onClick={() => window.showComponent('admin')}>
+                            <i className="fas fa-cog me-2"></i> Admin Panel
+                        </button>
 
-                        {/* Recent Activity */}
-                        <div className="bg-card rounded-4 p-3 border border-secondary border-opacity-25 flex-grow-1" style={{ overflowY: 'auto', maxHeight: '70vh' }}>
-                            <h5 className="fw-bold mb-3 border-bottom border-secondary pb-2">
-                                <i className="fas fa-history text-accent me-2"></i> Recent Activity
-                            </h5>
-                            <div id="logList">
-                                {stats.history.slice().reverse().map((item, idx) => (
-                                    <div key={idx} className={`log-item ${item.relation.includes('Suspect') || item.name === 'System' ? 'suspect' : ''}`}>
-                                        <img src={`/static/${item.image}`} className="avatar" onError={(e) => e.target.src = 'https://via.placeholder.com/45?text=?'} />
-                                        <div className="content">
-                                            <div className="fw-bold">{item.name} <span className="badge bg-secondary" style={{ fontSize: '0.6rem' }}>{item.relation}</span></div>
-                                            <div className="small">{item.action}</div>
+                        <div className="recent-activity-panel bg-panel rounded-3 border border-dark-subtle d-flex flex-column flex-grow-1 overflow-hidden mt-2">
+                            <div className="p-3 border-bottom border-secondary bg-dark-header">
+                                <h6 className="fw-bold mb-0"><i className="fas fa-history me-2 text-secondary"></i> Recent Activity</h6>
+                            </div>
+                            <div className="flex-grow-1 overflow-y-auto p-2 scrollbar-thin">
+                                {stats.history && stats.history.length > 0 ? (
+                                    stats.history.slice().reverse().map((item, idx) => (
+                                        <div key={idx} className={`activity-item p-2 mb-2 rounded-3 d-flex align-items-center gap-3 border ${item.relation?.includes('Suspect') ? 'border-danger bg-danger-subtle' : 'border-dark-subtle bg-dark-item'}`}>
+                                            <div className="avatar-wrapper" style={{ width: 45, height: 45 }}>
+                                                <img
+                                                    src={item.image?.startsWith('http') ? item.image : `/static/${item.image}`}
+                                                    className="w-100 h-100 rounded-circle object-fit-cover border border-secondary"
+                                                    onError={(e) => e.target.src = 'https://via.placeholder.com/45?text=?'}
+                                                />
+                                            </div>
+                                            <div className="flex-grow-1 min-w-0">
+                                                <div className="d-flex justify-content-between">
+                                                    <span className="fw-bold text-sm text-white text-truncate">{item.name}</span>
+                                                    <span className="text-secondary x-small opacity-75">{item.time}</span>
+                                                </div>
+                                                <div className="d-flex justify-content-between align-items-center mt-1">
+                                                    <small className="text-secondary text-truncate" style={{ fontSize: '0.75rem', maxWidth: '120px' }}>{item.action}</small>
+                                                    <span className={`badge rounded-pill ${item.relation?.includes('Suspect') ? 'bg-danger text-white' : 'bg-secondary text-dark'} x-small scale-90`}>
+                                                        {item.relation}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="time">{item.time}</div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-5 text-secondary opacity-50">
+                                        <p>No matches yet</p>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
                     </div>
@@ -275,9 +276,9 @@ const Dashboard = () => {
 
                 {/* Add Camera Modal */}
                 {showAddCameraModal && (
-                    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.8)' }}>
-                        <div className="modal-dialog">
-                            <form onSubmit={handleAddCamera} className="modal-content bg-card text-white border-secondary" style={{ background: '#1e293b' }}>
+                    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)' }}>
+                        <div className="modal-dialog modal-dialog-centered">
+                            <form onSubmit={handleAddCamera} className="modal-content bg-dark text-white border-secondary shadow-lg">
                                 <div className="modal-header border-bottom border-secondary">
                                     <h5 className="modal-title">Add New Camera</h5>
                                     <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddCameraModal(false)}></button>
@@ -286,9 +287,9 @@ const Dashboard = () => {
                                     {availableCameras.length > 0 ? (
                                         <>
                                             <div className="mb-3">
-                                                <label>Select Camera</label>
+                                                <label className="form-label text-secondary small">Select Device</label>
                                                 <select
-                                                    className="form-select bg-dark text-white border-secondary"
+                                                    className="form-select bg-black text-white border-secondary"
                                                     value={newCamData.id}
                                                     onChange={e => {
                                                         const selected = availableCameras.find(c => c.id == e.target.value);
@@ -301,24 +302,26 @@ const Dashboard = () => {
                                                 </select>
                                             </div>
                                             <div className="mb-3">
-                                                <label>Label</label>
+                                                <label className="form-label text-secondary small">Camera Label</label>
                                                 <input
                                                     type="text"
-                                                    className="form-control bg-dark text-white border-secondary"
-                                                    placeholder="e.g. Entrance"
+                                                    className="form-control bg-black text-white border-secondary"
+                                                    placeholder="e.g. Entrance Hall"
                                                     value={newCamData.label}
                                                     onChange={e => setNewCamData({ ...newCamData, label: e.target.value })}
                                                 />
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="alert alert-warning">
-                                            No new cameras detected. Please ensure cameras are connected.
+                                        <div className="alert alert-warning d-flex align-items-center">
+                                            <i className="fas fa-exclamation-triangle me-3"></i>
+                                            <div>No new cameras detected on the system.</div>
                                         </div>
                                     )}
                                 </div>
                                 <div className="modal-footer border-top border-secondary">
-                                    <button type="submit" className="btn btn-success w-100" disabled={availableCameras.length === 0}>Add Camera</button>
+                                    <button type="button" className="btn btn-outline-light" onClick={() => setShowAddCameraModal(false)}>Cancel</button>
+                                    <button type="submit" className="btn btn-primary px-4" disabled={availableCameras.length === 0}>Add Camera</button>
                                 </div>
                             </form>
                         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { addContact, fetchContacts } from '../api';
+import Sidebar from './Sidebar';
 
 const Contacts = () => {
     const [contacts, setContacts] = useState([]);
@@ -9,6 +10,8 @@ const Contacts = () => {
         loadContacts();
     }, []);
 
+    const [formData, setFormData] = useState({ name: '', phone: '', relation: 'Security' });
+
     const loadContacts = async () => {
         try {
             const data = await fetchContacts();
@@ -16,71 +19,131 @@ const Contacts = () => {
         } catch (e) { console.error(e); }
     };
 
-    const handleSubmit = async (e) => {
+    const handleAdd = async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        await addContact(formData);
-        window.location.reload();
+        try {
+            await addContact(formData.name, formData.phone, formData.relation);
+            setShowAddModal(false);
+            setFormData({ name: '', phone: '', relation: 'Security' });
+            loadContacts();
+        } catch (e) { alert("Failed to add contact"); }
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this contact?')) return;
+        try {
+            // Import deleteContact at top if not present, but I see I imported addContact only
+            // I need to import deleteContact from api
+            const { deleteContact } = await import('../api');
+            await deleteContact(id);
+            loadContacts();
+        } catch (e) { console.error(e); }
     };
 
     return (
-        <div className="container-fluid p-4">
-            <div className="d-flex justify-content-between align-items-center mb-5">
-                <div>
-                    <h2 className="fw-bold text-danger">Emergency Response Team</h2>
-                    <p className="text-secondary">Manage contacts who will be auto-dialed during security alerts.</p>
-                </div>
-                <button className="btn btn-danger" onClick={() => setShowAddModal(true)}>
-                    <i className="fas fa-plus me-2"></i> Add Responder
-                </button>
-            </div>
+        <div className="d-flex h-100 bg-dark-theme font-sans text-light overflow-hidden">
+            <Sidebar activePage="contacts" />
 
-            <div className="row g-4">
-                {contacts.length > 0 ? contacts.map((c, idx) => (
-                    <div className="col-md-6 col-lg-4" key={c._id || idx}>
-                        <div className="contact-card h-100 position-relative group" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div className="d-flex align-items-center gap-4">
-                                <div className="bg-danger bg-opacity-10 text-danger p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                                    <i className="fas fa-user-shield fa-lg"></i>
-                                </div>
-                                <div className="contact-info flex-grow-1">
-                                    <h5 className="mb-1 text-white fw-bold" style={{ margin: 0, fontWeight: 600 }}>{c.name}</h5>
-                                    <div className="d-flex align-items-center gap-2 mb-1">
-                                        <span className="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">{c.relation}</span>
+            <div className="flex-grow-1 d-flex flex-column overflow-hidden">
+                <div className="p-4 overflow-auto flex-grow-1">
+                    <div className="d-flex justify-content-between align-items-center mb-5 border-bottom border-secondary pb-4">
+                        <div>
+                            <h2 className="fw-bold text-danger text-uppercase mb-1"><i className="fas fa-phone-volume me-2"></i> Emergency Contacts</h2>
+                            <p className="text-secondary mb-0">Manage personnel to be auto-dialed during security alerts.</p>
+                        </div>
+                        <button className="btn btn-danger" onClick={() => setShowAddModal(true)}>
+                            <i className="fas fa-user-plus me-2"></i> Add Contact
+                        </button>
+                    </div>
+
+                    <div className="row g-4">
+                        {contacts.length > 0 ? (
+                            contacts.map((c) => (
+                                <div className="col-md-6 col-lg-4" key={c._id}>
+                                    <div className="card bg-panel border-secondary h-100 shadow-sm hover-elevate transition-all">
+                                        <div className="card-body d-flex align-items-center gap-3">
+                                            <div className="bg-danger bg-opacity-10 text-danger rounded-circle p-3 d-flex align-items-center justify-content-center" style={{ width: 64, height: 64 }}>
+                                                <i className="fas fa-user-shield fa-2x"></i>
+                                            </div>
+                                            <div className="flex-grow-1 overflow-hidden">
+                                                <h5 className="mb-1 text-white fw-bold text-truncate">{c.name}</h5>
+                                                <div className="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 mb-2">{c.relation}</div>
+                                                <div className="text-secondary small font-monospace"><i className="fas fa-phone-alt me-2"></i>{c.phone}</div>
+                                            </div>
+                                            <button
+                                                className="btn btn-outline-danger btn-sm rounded-circle"
+                                                onClick={() => handleDelete(c._id)}
+                                                title="Delete Contact"
+                                                style={{ width: 32, height: 32, padding: 0 }}
+                                            >
+                                                <i className="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <p className="text-secondary small font-monospace" style={{ margin: 0, color: '#94a3b8' }}><i className="fas fa-phone me-1"></i> {c.phone}</p>
                                 </div>
+                            ))
+                        ) : (
+                            null
+                        )}
+
+                        {contacts.length === 0 && (
+                            <div className="col-12 text-center py-5">
+                                <div className="text-secondary opacity-25 mb-3"><i className="fas fa-address-book fa-5x"></i></div>
+                                <h4 className="text-secondary">No contacts configured.</h4>
+                                <p className="text-muted">Add security personnel to ensure rapid response.</p>
                             </div>
-                            <a href={`/admin/delete_contact/${c._id}/`} className="btn btn-outline-danger btn-sm" onClick={e => { if (!confirm('Delete?')) e.preventDefault() }}>
-                                <i className="fas fa-trash"></i>
-                            </a>
-                        </div>
+                        )}
                     </div>
-                )) : (
-                    <div className="col-12 py-5 text-center">
-                        <div className="mb-3 text-secondary opacity-50">
-                            <i className="fas fa-users-slash fa-4x"></i>
-                        </div>
-                        <h5 className="text-secondary">No responders configured</h5>
-                        <p class="small text-muted">Add security personnel or local authorities to auto-dial during alerts.</p>
-                    </div>
-                )}
+                </div>
             </div>
 
             {showAddModal && (
-                <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.8)' }}>
-                    <div className="modal-dialog">
-                        <form onSubmit={handleSubmit} className="modal-content" style={{ background: '#1e293b', color: 'white', border: '1px solid #475569' }}>
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <form onSubmit={handleAdd} className="modal-content bg-dark border-secondary text-light shadow-lg">
                             <div className="modal-header border-bottom border-secondary">
-                                <h5 className="modal-title">New Contact</h5>
+                                <h5 className="modal-title fw-bold"><i className="fas fa-user-plus me-2 text-danger"></i> Add Emergency Contact</h5>
                                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddModal(false)}></button>
                             </div>
                             <div className="modal-body">
-                                <div className="mb-3"><label>Name</label><input name="name" className="form-control bg-dark text-light border-secondary" required /></div>
-                                <div className="mb-3"><label>Phone</label><input name="phone" className="form-control bg-dark text-light border-secondary" required /></div>
-                                <div className="mb-3"><label>Role</label><select name="relation" className="form-select bg-dark text-light border-secondary"><option>Security</option><option>Police</option><option>Owner</option></select></div>
+                                <div className="mb-3">
+                                    <label className="form-label text-secondary small text-uppercase fw-bold">Full Name</label>
+                                    <input
+                                        className="form-control bg-black border-secondary text-white"
+                                        value={formData.name}
+                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                        required
+                                        placeholder="e.g. Officer John Doe"
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label text-secondary small text-uppercase fw-bold">Phone Number</label>
+                                    <input
+                                        className="form-control bg-black border-secondary text-white"
+                                        value={formData.phone}
+                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                        required
+                                        placeholder="e.g. +1 555-0123"
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label text-secondary small text-uppercase fw-bold">Role / Relation</label>
+                                    <select
+                                        className="form-select bg-black border-secondary text-white"
+                                        value={formData.relation}
+                                        onChange={e => setFormData({ ...formData, relation: e.target.value })}
+                                    >
+                                        <option value="Security">Security Personnel</option>
+                                        <option value="Police">Police / Law Enforcement</option>
+                                        <option value="Owner">Owner / Manager</option>
+                                        <option value="Medical">Medical / Ambulance</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div className="modal-footer border-top border-secondary"><button type="submit" className="btn btn-danger w-100">Save Responder</button></div>
+                            <div className="modal-footer border-top border-secondary">
+                                <button type="button" className="btn btn-outline-light" onClick={() => setShowAddModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-danger px-4">Save Contact</button>
+                            </div>
                         </form>
                     </div>
                 </div>

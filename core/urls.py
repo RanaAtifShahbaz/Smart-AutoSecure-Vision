@@ -38,6 +38,9 @@ urlpatterns = [
     path('admin/delete/<int:serial_no>/', views.delete_person, name='delete_person'),
     path('admin/update/<int:serial_no>/', views.update_person, name='update_person'),
     
-    path('admin/add_contact/', views.add_contact, name='add_contact'),
-    path('admin/delete_contact/<contact_id>/', views.delete_contact, name='delete_contact'),
+    # React / REST API
+    path('api/login/', views.api_login, name='api_login'),
+    path('api/register/', views.api_register, name='api_register'),
+    path('api/add_contact/', views.api_add_contact, name='api_add_contact'),
+    path('api/delete_contact/<contact_id>/', views.api_delete_contact, name='api_delete_contact'),
 ]

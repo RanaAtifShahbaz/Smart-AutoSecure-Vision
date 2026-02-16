@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchLogs } from '../api';
+import Sidebar from './Sidebar';
 
 const Logs = () => {
     const [logs, setLogs] = useState([]);
@@ -60,87 +61,94 @@ const Logs = () => {
     const filteredLogs = filter === 'All' ? logs : logs.filter(l => l.severity === filter || l.type === filter);
 
     return (
-        <div className="container-fluid p-4">
-            {/* Header */}
-            <div className="d-flex justify-content-between align-items-end mb-4 border-bottom border-secondary pb-3">
-                <div>
-                    <h2 className="fw-bold text-uppercase mb-0"><i className="fas fa-file-medical-alt text-primary me-2"></i> Security Logs</h2>
-                    <p className="text-secondary mb-0 mt-1">Comprehensive audit trail of all detected security events.</p>
-                </div>
-                <div className="d-flex gap-2">
-                    {['All', 'Critical', 'High', 'Weapon', 'Person'].map(f => (
-                        <button
-                            key={f}
-                            className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-outline-secondary'}`}
-                            onClick={() => setFilter(f)}
-                        >
-                            {f}
-                        </button>
-                    ))}
-                    <button className="btn btn-sm btn-outline-light ms-2" onClick={loadLogs}>
-                        <i className="fas fa-sync"></i>
-                    </button>
-                </div>
-            </div>
+        <div className="d-flex h-100 bg-dark-theme font-sans text-light overflow-hidden">
+            <Sidebar activePage="logs" />
 
-            {/* Logs Table */}
-            <div className="card bg-dark border-secondary">
-                <div className="table-responsive">
-                    <table className="table table-dark table-hover mb-0 align-middle">
-                        <thead className="bg-black bg-opacity-25">
-                            <tr>
-                                <th className="ps-4">Timestamp</th>
-                                <th>Severity</th>
-                                <th>Event Type</th>
-                                <th>Description</th>
-                                <th>Snapshot</th>
-                                <th className="text-end pe-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredLogs.length > 0 ? (
-                                filteredLogs.map((log) => (
-                                    <tr key={log.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedLog(log)}>
-                                        <td className="ps-4 text-nowrap">
-                                            <div className="fw-bold">{log.date}</div>
-                                            <div className="small text-secondary">{log.time}</div>
-                                        </td>
-                                        <td>{getSeverityBadge(log.severity)}</td>
-                                        <td>
-                                            <span className={`badge border ${log.type === 'Weapon' ? 'border-danger text-danger' : 'border-info text-info'} bg-transparent`}>
-                                                {log.type.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="fw-bold">{log.name === 'System' ? log.action : log.name}</div>
-                                            <div className="small text-secondary">{log.relation}</div>
-                                        </td>
-                                        <td>
-                                            <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '4px' }}>
-                                                <img
-                                                    src={log.image && log.image.startsWith('http') ? log.image : `/static/${log.image}`}
-                                                    className="w-100 h-100 object-fit-cover"
-                                                    alt="Thumbnail"
-                                                />
-                                            </div>
-                                        </td>
-                                        <td className="text-end pe-4">
-                                            <button className="btn btn-sm btn-outline-primary" onClick={(e) => { e.stopPropagation(); setSelectedLog(log); }}>
-                                                View
-                                            </button>
-                                        </td>
+            <div className="flex-grow-1 d-flex flex-column overflow-hidden">
+                <div className="p-4 overflow-auto flex-grow-1 custom-scrollbar">
+                    {/* Header */}
+                    <div className="d-flex justify-content-between align-items-end mb-4 border-bottom border-secondary pb-3">
+                        <div>
+                            <h2 className="fw-bold text-uppercase mb-0"><i className="fas fa-file-medical-alt text-primary me-2"></i> Security Logs</h2>
+                            <p className="text-secondary mb-0 mt-1">Comprehensive audit trail of all detected security events.</p>
+                        </div>
+                        <div className="d-flex gap-2">
+                            {['All', 'Critical', 'High', 'Weapon', 'Person'].map(f => (
+                                <button
+                                    key={f}
+                                    className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                    onClick={() => setFilter(f)}
+                                >
+                                    {f}
+                                </button>
+                            ))}
+                            <button className="btn btn-sm btn-outline-light ms-2" onClick={loadLogs}>
+                                <i className="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Logs Table */}
+                    <div className="card bg-panel border-secondary shadow-sm">
+                        <div className="table-responsive">
+                            <table className="table table-dark table-hover mb-0 align-middle">
+                                <thead className="bg-dark-header">
+                                    <tr>
+                                        <th className="ps-4">Timestamp</th>
+                                        <th>Severity</th>
+                                        <th>Event Type</th>
+                                        <th>Description</th>
+                                        <th>Snapshot</th>
+                                        <th className="text-end pe-4">Actions</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="text-center py-5 text-secondary">
-                                        <i className="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                                        <p>No logs found matching criteria.</p>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                    {filteredLogs.length > 0 ? (
+                                        filteredLogs.map((log) => (
+                                            <tr key={log._id || log.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedLog(log)}>
+                                                <td className="ps-4 text-nowrap">
+                                                    <div className="fw-bold">{log.date}</div>
+                                                    <div className="small text-secondary">{log.time}</div>
+                                                </td>
+                                                <td>{getSeverityBadge(log.severity)}</td>
+                                                <td>
+                                                    <span className={`badge border ${log.type === 'Weapon' ? 'border-danger text-danger' : 'border-info text-info'} bg-transparent`}>
+                                                        {log.type.toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div className="fw-bold">{log.name === 'System' ? log.action : log.name}</div>
+                                                    <div className="small text-secondary">{log.relation}</div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '4px' }}>
+                                                        <img
+                                                            src={log.image?.startsWith('http') ? log.image : `/static/${log.image}`}
+                                                            className="w-100 h-100 object-fit-cover shadow-sm"
+                                                            alt="Thumbnail"
+                                                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/40?text=?'; }}
+                                                        />
+                                                    </div>
+                                                </td>
+                                                <td className="text-end pe-4">
+                                                    <button className="btn btn-sm btn-outline-primary shadow-sm" onClick={(e) => { e.stopPropagation(); setSelectedLog(log); }}>
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" className="text-center py-5 text-secondary">
+                                                <i className="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                                                <p>No logs found matching criteria.</p>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 

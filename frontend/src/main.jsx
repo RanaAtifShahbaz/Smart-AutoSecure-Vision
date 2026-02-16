@@ -5,6 +5,8 @@ import Admin from './components/Admin'
 import Logs from './components/Logs'
 import Contacts from './components/Contacts'
 
+import Login from './components/Login'
+
 // Helper to mount if element exists
 const mount = (id, Component) => {
     const el = document.getElementById(id);
@@ -22,3 +24,4 @@ mount('dashboard-root', Dashboard);
 mount('admin-root', Admin);
 mount('logs-root', Logs);
 mount('contacts-root', Contacts);
+mount('login-root', Login);
